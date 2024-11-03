@@ -7,10 +7,7 @@ This Python script automatically organizes files from a specified source directo
 - **Customizable File Organization**: Define your own categories and file types to suit your needs.
 - **Automatic Folder Creation**: Creates destination folders as needed, so you don’t have to.
 
-## Installation
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/file-organizer.git
-   cd file-organizer
+
+
 
