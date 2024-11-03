@@ -1,2 +1,16 @@
-# Desktop_file_organizer
-A Python script that organizes files by type, moving them from a monitored source directory into categorized folders in a destination directory. Supports real-time tracking using watchdog and custom categorization of file types for easy file management.
+# File Organizer
+
+This Python script automatically organizes files from a specified source directory into categorized folders within a destination directory. It tracks file additions in real-time and moves them based on their file types, making file management simple and efficient.
+
+## Features
+- **Real-Time Monitoring**: Tracks new files added to the source directory in real-time using `watchdog`.
+- **Customizable File Organization**: Define your own categories and file types to suit your needs.
+- **Automatic Folder Creation**: Creates destination folders as needed, so you don’t have to.
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/file-organizer.git
+   cd file-organizer
+
