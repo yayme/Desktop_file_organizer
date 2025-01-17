@@ -41,12 +41,6 @@ A Python script to organize files from a specified source directory into categor
 
 ---
 
-## Usage
-1. Modify `source_dir` and `destination_dir` in the script.
-2. Customize categories and extensions in the `File_types` dictionary.
-3. Run the script or use the standalone `.exe`:
-   ```bash
-   pyinstaller --onefile --windowed --icon=your_icon.ico file_organizer.py
 
 
 
