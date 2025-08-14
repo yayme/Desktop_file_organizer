@@ -59,13 +59,25 @@ def save_labels(labels):
 labels = load_labels()
 
 def calculate_similarity(file_text, labels):
-    """Calculate similarity of the file text with predefined labels."""
+    """Calculate similarity of the file text with predefined labels using spaCy NLP first, then TF-IDF as fallback."""
+    # Try spaCy NLP similarity first
+    try:
+        doc = nlp(file_text)
+        nlp_similarities = [doc.similarity(nlp(label)) for label in labels]
+        max_nlp_sim = max(nlp_similarities)
+        if max_nlp_sim > 0.01:  # Use NLP if it gives a meaningful score
+            max_index = nlp_similarities.index(max_nlp_sim)
+            return labels[max_index], float(max_nlp_sim)
+    except Exception as e:
+        print(f"NLP similarity failed: {e}")
+
+    # Fallback to TF-IDF
     vectorizer = TfidfVectorizer(stop_words="english")
     texts = [file_text] + labels
     tfidf_matrix = vectorizer.fit_transform(texts)
     similarities = tfidf_matrix[0, 1:].toarray()[0]
     max_similarity_index = similarities.argmax()
-    return labels[max_similarity_index], similarities[max_similarity_index]
+    return labels[max_similarity_index], float(similarities[max_similarity_index])
 
 
 def wait_for_file(file_path):
@@ -131,15 +143,48 @@ def start_observer():
     messagebox.showinfo("File Organizer", "Observation started. Press Stop button to stop.")
 
 
+def move_anyway_threaded(move_anyway_button):
+    def do_move():
+        src = config["source_dir"]
+        dst = config["destination_dir"]
+        if not src or not dst:
+            messagebox.showerror("Error", "Please select both source and destination directories.")
+            move_anyway_button.config(state=tk.NORMAL)
+            return
+        skipped = []
+        moved = 0
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            try:
+                if os.path.isdir(s) or os.path.isfile(s):
+                    shutil.move(s, d)
+                    moved += 1
+            except Exception as e:
+                skipped.append(f"{item}: {e}")
+        msg = f"Moved {moved} items from source to destination."
+        if skipped:
+            msg += f"\nSkipped {len(skipped)} items."
+        messagebox.showinfo("Move Anyway", msg)
+        if skipped:
+            print("Skipped items during Move Anyway:")
+            for s in skipped:
+                print(s)
+        move_anyway_button.config(state=tk.NORMAL)
+    move_anyway_button.config(state=tk.DISABLED)
+    threading.Thread(target=do_move, daemon=True).start()
+
+
 def stop_observer():
-    """Stop the file observer."""
+    """Stop the file observer and cancel any ongoing move anyway operation (if needed)."""
     global observer, observer_thread
     if observer:
         observer.stop()
         observer.join()
         observer = None
         observer_thread = None
-        messagebox.showinfo("File Organizer", "Observation stopped.")
+    # No background thread for move_anyway, so just show info
+    messagebox.showinfo("File Organizer", "All actions stopped.")
 
 
 def select_directory(label, config_key):
@@ -171,13 +216,20 @@ def launch_app():
     dest_button = tk.Button(root, text="Select Destination Directory", command=lambda: select_directory(dest_label, "destination_dir"))
     dest_button.pack(pady=5)
 
-    # Start button to begin file organizing
-    start_button = tk.Button(root, text="Start File Organizer", command=start_observer, padx=20, pady=10)
-    start_button.pack(pady=20)
 
-    # Stop button to halt the file organizing
-    stop_button = tk.Button(root, text="Stop File Organizer", command=stop_observer, padx=20, pady=10)
-    stop_button.pack(pady=20)
+    # Start observer button
+    start_button = tk.Button(root, text="Start Observer", command=start_observer, padx=20, pady=10)
+    start_button.pack(pady=10)
+
+
+    # Move Anyway button (threaded)
+    move_anyway_button = tk.Button(root, text="Move Anyway", padx=20, pady=10)
+    move_anyway_button.config(command=lambda: move_anyway_threaded(move_anyway_button))
+    move_anyway_button.pack(pady=10)
+
+    # Stop button to halt all actions
+    stop_button = tk.Button(root, text="Stop", command=stop_observer, padx=20, pady=10)
+    stop_button.pack(pady=10)
 
     # Label management section
     label_frame = tk.LabelFrame(root, text="Manage Labels", padx=10, pady=10)
