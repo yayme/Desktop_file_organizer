@@ -1,3 +1,5 @@
+
+
 # File Organizer
 
 A Python script to organize files from a specified source directory into categorized folders in a destination directory. The application monitors the source directory in real-time and moves files based on their types, simplifying file management.
@@ -18,6 +20,7 @@ A Python script to organize files from a specified source directory into categor
 - `watchdog`: Real-time monitoring of directory changes.
 - `tkinter`: Graphical User Interface (GUI).
 - `threading`: Non-blocking observer for smooth GUI operation.
+- `spacy`, `scikit-learn`: For content-based file categorization (v4).
 
 ---
 
@@ -38,6 +41,16 @@ A Python script to organize files from a specified source directory into categor
 ### **v3: Observer Stop Fix**
 - Introduced `threading` to run the observer in a separate thread.
 - Added a functional "Stop" button to cleanly terminate the process.
+
+### **v4: Content-Based Sorting, Move Anyway, and Improved Workflow**
+- Added content-based file categorization using spaCy and TF-IDF (fallback).
+- Added "Move Anyway" button to move all files/folders from source to destination, skipping any that can't be moved.
+- Observer and Move Anyway run in the background, keeping the GUI responsive.
+- Improved workflow:
+	- Select source and destination directories.
+	- Start Observer to auto-organize new files by content/category.
+	- Use "Move Anyway" to move everything at once (skips locked/unmovable files).
+	- Stop button halts all actions.
 
 ---
 
