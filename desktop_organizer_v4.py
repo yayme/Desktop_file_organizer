@@ -146,23 +146,41 @@ def start_observer():
 def move_anyway_threaded(move_anyway_button):
     def do_move():
         src = config["source_dir"]
-        dst = config["destination_dir"]
-        if not src or not dst:
+        if not src or not config["destination_dir"]:
             messagebox.showerror("Error", "Please select both source and destination directories.")
             move_anyway_button.config(state=tk.NORMAL)
             return
         skipped = []
         moved = 0
+
+        def process_path(path):
+            nonlocal moved
+            if os.path.isfile(path):
+                try:
+                    organize_files(path)
+                    moved += 1
+                except Exception as e:
+                    skipped.append(f"{os.path.basename(path)}: {e}")
+            elif os.path.isdir(path):
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        try:
+                            organize_files(file_path)
+                            moved += 1
+                        except Exception as e:
+                            skipped.append(f"{file}: {e}")
+                # After processing, try to remove the empty folder
+                try:
+                    shutil.rmtree(path)
+                except Exception as e:
+                    skipped.append(f"{os.path.basename(path)} (folder): {e}")
+
         for item in os.listdir(src):
             s = os.path.join(src, item)
-            d = os.path.join(dst, item)
-            try:
-                if os.path.isdir(s) or os.path.isfile(s):
-                    shutil.move(s, d)
-                    moved += 1
-            except Exception as e:
-                skipped.append(f"{item}: {e}")
-        msg = f"Moved {moved} items from source to destination."
+            process_path(s)
+
+        msg = f"Moved {moved} files from source to destination using content-based classification."
         if skipped:
             msg += f"\nSkipped {len(skipped)} items."
         messagebox.showinfo("Move Anyway", msg)
